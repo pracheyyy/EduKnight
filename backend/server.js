@@ -4,6 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 
 connectDB();
@@ -17,6 +18,7 @@ app.use(cookieParser());
 // ---- Routes ----
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'EduKnight API is running.' }));
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // Future modules mount here the same way, e.g.:
 // app.use('/api/exams', require('./routes/examRoutes'));

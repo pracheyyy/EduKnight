@@ -165,3 +165,179 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 30px; margin: 0 auto 22px;
 }
+
+/* ==========================================================================
+   AUTH v2 — clean pill layout (login / signup)
+   Left: airy form, pill inputs, single social action.
+   Right: soft brand panel — rank-ring illustration + floating stat cards,
+   replacing a generic character illustration with EduKnight's own motif.
+   ========================================================================== */
+
+.authv2-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg);
+}
+
+.authv2-form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 8vw;
+  position: relative;
+}
+
+.authv2-back {
+  position: absolute; top: 32px; left: 8vw;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13.5px; font-weight: 500; color: var(--text-muted);
+  transition: color 0.25s var(--ease-knight);
+}
+.authv2-back:hover { color: var(--primary); }
+
+.authv2-card { max-width: 400px; width: 100%; margin: 0 auto; }
+
+.authv2-card h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+.authv2-card .authv2-sub { font-size: 14px; margin-bottom: 30px; }
+.authv2-card .authv2-sub a { color: var(--primary); font-weight: 600; }
+
+/* Pill inputs */
+.pill-field { margin-bottom: 16px; }
+.pill-field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.01em; }
+.pill-input {
+  display: flex; align-items: center; gap: 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  padding: 13px 20px;
+  transition: all 0.25s var(--ease-knight);
+}
+.pill-input:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
+.pill-input i { color: var(--text-muted); font-size: 15px; flex-shrink: 0; }
+.pill-input input {
+  border: none; outline: none; background: transparent; flex: 1;
+  font-family: var(--font-body); font-size: 14.5px; color: var(--text);
+}
+.pill-input input::placeholder { color: #A6AEBC; }
+.pill-input .pw-toggle,
+.pill-input .toggle-pass {
+  position: static;      /* override the old absolute-positioned .toggle-pass rule —
+                             pill-input is a flex row, so the icon just sits inline */
+  transform: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 15px;
+  background: none;
+  border: none;
+}
+.pill-input .pw-toggle:hover,
+.pill-input .toggle-pass:hover { color: var(--primary); }
+
+.authv2-row { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 26px; font-size: 13px; }
+.authv2-row a { color: var(--primary); font-weight: 600; }
+.authv2-check { display: flex; align-items: center; gap: 8px; color: var(--text-muted); cursor: pointer; }
+.authv2-check input { accent-color: var(--primary); width: 15px; height: 15px; }
+
+.btn-pill-primary {
+  width: 100%;
+  background: var(--gradient-primary);
+  color: #fff; border: none;
+  padding: 15px; border-radius: var(--radius-pill);
+  font-family: var(--font-body); font-weight: 600; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; transition: all 0.3s var(--ease-knight);
+  box-shadow: var(--shadow-glow);
+}
+.btn-pill-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(37,99,235,0.28); }
+.btn-pill-primary:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+.authv2-divider { display: flex; align-items: center; gap: 14px; margin: 26px 0; color: var(--text-muted); font-size: 12.5px; }
+.authv2-divider::before, .authv2-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.btn-social {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  border: 1.5px solid var(--border); background: var(--card);
+  padding: 13px; border-radius: var(--radius-pill);
+  font-family: var(--font-body); font-weight: 600; font-size: 14.5px; color: var(--text);
+  cursor: pointer; transition: all 0.25s var(--ease-knight);
+}
+.btn-social:hover { border-color: var(--primary); background: rgba(37,99,235,0.05); }
+.btn-social img, .btn-social svg { width: 18px; height: 18px; }
+
+.authv2-footer-link { text-align: center; margin-top: 28px; font-size: 13.5px; color: var(--text-muted); }
+.authv2-footer-link a { color: var(--primary); font-weight: 600; }
+
+/* Password strength meter (signup) */
+.pw-strength { display: flex; gap: 5px; margin-top: 8px; }
+.pw-strength i { flex: 1; height: 4px; border-radius: var(--radius-pill); background: var(--border); transition: background 0.3s var(--ease-knight); }
+.pw-strength-label { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; display: block; }
+
+/* ---- Right: illustration / brand side ---- */
+.authv2-visual-side {
+  position: relative;
+  background: var(--gradient-primary);
+  overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px;
+}
+.authv2-visual-side::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: linear-gradient(115deg, rgba(255,255,255,0.07) 1px, transparent 1px),
+                     linear-gradient(25deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(circle at 50% 40%, black, transparent 75%);
+}
+.authv2-visual-inner { position: relative; z-index: 2; text-align: center; color: #fff; max-width: 380px; }
+.authv2-visual-inner h2 { color: #fff; font-size: 26px; font-weight: 700; line-height: 1.3; margin-bottom: 10px; }
+.authv2-visual-inner p { color: rgba(255,255,255,0.85); font-size: 14.5px; margin-bottom: 40px; }
+
+.authv2-illustration { position: relative; width: 100%; max-width: 340px; margin: 0 auto 40px; }
+
+.authv2-float-card {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  text-align: left;
+  animation: floatY 5s ease-in-out infinite;
+}
+.authv2-float-card:nth-child(2) { animation-delay: 0.6s; }
+.authv2-float-card:nth-child(3) { animation-delay: 1.2s; }
+.authv2-float-card .icon-chip {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center; font-size: 17px;
+}
+.authv2-float-card strong { display: block; color: #fff; font-size: 14px; font-weight: 700; }
+.authv2-float-card span { color: rgba(255,255,255,0.75); font-size: 12px; }
+
+.authv2-dots { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
+.authv2-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); }
+.authv2-dots i.active { width: 20px; border-radius: var(--radius-pill); background: #fff; }
+
+@media (max-width: 991px) {
+  .authv2-shell { grid-template-columns: 1fr; }
+  .authv2-visual-side { display: none; }
+  .authv2-back { position: static; margin-bottom: 24px; display: inline-flex; }
+  .authv2-form-side { padding: 32px 24px; }
+}
+
+/* ---- Pill input error/valid states (v2 forms) ---- */
+.pill-input input.is-invalid { color: var(--danger); }
+.pill-field:has(input.is-invalid) .pill-input { border-color: var(--danger); }
+.pill-field:has(input.is-valid) .pill-input { border-color: var(--success); }
+
+/* ---- Password strength bars, direct-child markup used in signup v2 ---- */
+.pw-strength[data-level="1"] i:nth-child(1) { background: var(--danger); }
+.pw-strength[data-level="1"] ~ .pw-strength-label { color: var(--danger); }
+.pw-strength[data-level="2"] i:nth-child(-n+2) { background: var(--warning); }
+.pw-strength[data-level="2"] ~ .pw-strength-label { color: var(--warning); }
+.pw-strength[data-level="3"] i:nth-child(-n+3) { background: var(--accent); }
+.pw-strength[data-level="3"] ~ .pw-strength-label { color: var(--accent); }
+.pw-strength[data-level="4"] i { background: var(--success); }
+.pw-strength[data-level="4"] ~ .pw-strength-label { color: var(--success); }

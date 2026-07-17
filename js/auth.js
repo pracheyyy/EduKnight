@@ -1,9 +1,12 @@
 /* ==========================================================================
    EduKnight — Auth JS
    Handles: password visibility, strength meter, client-side validation,
-   OTP-style input focus flow, and mock submit calls to the auth API.
-   Toasts via Toastify, confirmations via SweetAlert2.
+   OTP input flow, and REAL calls to the backend auth API.
+   Toasts via Toastify.
    ========================================================================== */
+
+// Backend base URL — change this if your API runs somewhere else (e.g. after deploying)
+const API_BASE_URL = 'http://localhost:5000/api';
 
 document.addEventListener('DOMContentLoaded', () => {
   initThemeFromStorage();
@@ -23,14 +26,21 @@ function initThemeFromStorage() {
 }
 
 /* ---------------- Show/hide password ---------------- */
+/* Matches BOTH markup patterns used across auth pages:
+   - class="toggle-pass" (icon button) with data-target
+   - class="pw-toggle"   (inline <i>) with data-target      */
 function initPasswordToggles() {
-  document.querySelectorAll('.toggle-pass').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById(btn.getAttribute('data-target'));
+  document.querySelectorAll('.toggle-pass, .pw-toggle').forEach(el => {
+    el.addEventListener('click', () => {
+      const input = document.getElementById(el.getAttribute('data-target'));
       if (!input) return;
       const isPass = input.type === 'password';
       input.type = isPass ? 'text' : 'password';
-      btn.innerHTML = isPass ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+      el.classList.toggle('bi-eye', !isPass);
+      el.classList.toggle('bi-eye-slash', isPass);
+      if (el.tagName === 'BUTTON') {
+        el.innerHTML = isPass ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+      }
     });
   });
 }
@@ -56,7 +66,7 @@ function initPasswordStrength() {
   input.addEventListener('input', () => {
     const score = input.value.length ? scorePassword(input.value) || 1 : 0;
     meter.setAttribute('data-level', score);
-    label.textContent = input.value.length ? labels[score] : 'Enter a password';
+    if (label) label.textContent = input.value.length ? labels[score] : 'Enter a password';
   });
 }
 
@@ -78,7 +88,7 @@ function showToast(message, type = 'success') {
   if (window.Toastify) {
     Toastify({
       text: message,
-      duration: 3200,
+      duration: 3800,
       gravity: 'top',
       position: 'right',
       style: { background: bg[type] || bg.info, borderRadius: '10px', fontFamily: 'Inter, sans-serif', fontSize: '13.5px' },
@@ -88,12 +98,41 @@ function showToast(message, type = 'success') {
   }
 }
 
+/* ---------------- Shared: call the backend ---------------- */
+async function apiRequest(path, { method = 'GET', body } = {}) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', // send/receive the httpOnly JWT cookie
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  let data = null;
+  try { data = await res.json(); } catch (_) { /* empty body is fine */ }
+
+  if (!res.ok) {
+    const message = (data && data.message) || `Request failed (${res.status})`;
+    throw new Error(message);
+  }
+  return data;
+}
+
+function setBtnLoading(btn, loadingText) {
+  btn.dataset.originalHtml = btn.innerHTML;
+  btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status"></span> ${loadingText}`;
+  btn.disabled = true;
+}
+function resetBtn(btn) {
+  if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+  btn.disabled = false;
+}
+
 /* ---------------- Sign Up ---------------- */
 function initSignupForm() {
   const form = document.getElementById('signupForm');
   if (!form) return;
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     let valid = true;
 
@@ -111,7 +150,7 @@ function initSignupForm() {
     if (scorePassword(password.value) < 2) { setError(password, document.getElementById('passwordError'), 'Use at least 8 characters with a number'); valid = false; }
     else clearError(password, document.getElementById('passwordError'));
 
-    if (!terms.checked) {
+    if (terms && !terms.checked) {
       showToast('Please accept the Terms to continue', 'error');
       valid = false;
     }
@@ -119,17 +158,20 @@ function initSignupForm() {
     if (!valid) return;
 
     const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Creating account...';
-    submitBtn.disabled = true;
+    setBtnLoading(submitBtn, 'Creating account...');
 
-    // Placeholder for POST /api/auth/register
-    setTimeout(() => {
-      submitBtn.innerHTML = originalText;
-      submitBtn.disabled = false;
-      showToast(`Welcome to EduKnight, ${name.value.split(' ')[0]}! Verify your email to continue.`, 'success');
+    try {
+      await apiRequest('/auth/register', {
+        method: 'POST',
+        body: { name: name.value.trim(), email: email.value.trim(), password: password.value },
+      });
+      showToast(`Welcome to EduKnight, ${name.value.trim().split(' ')[0]}! Check your email for a verification code.`, 'success');
+      sessionStorage.setItem('eduknight-pending-email', email.value.trim());
       window.location.href = 'verify-email.html';
-    }, 1000);
+    } catch (err) {
+      showToast(err.message || 'Could not create your account. Please try again.', 'error');
+      resetBtn(submitBtn);
+    }
   });
 }
 
@@ -138,7 +180,7 @@ function initLoginForm() {
   const form = document.getElementById('loginForm');
   if (!form) return;
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     let valid = true;
 
@@ -154,17 +196,19 @@ function initLoginForm() {
     if (!valid) return;
 
     const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Signing in...';
-    submitBtn.disabled = true;
+    setBtnLoading(submitBtn, 'Signing in...');
 
-    // Placeholder for POST /api/auth/login
-    setTimeout(() => {
-      submitBtn.innerHTML = originalText;
-      submitBtn.disabled = false;
+    try {
+      await apiRequest('/auth/login', {
+        method: 'POST',
+        body: { email: email.value.trim(), password: password.value },
+      });
       showToast('Signed in successfully. Loading your dashboard...', 'success');
       window.location.href = 'dashboard.html';
-    }, 900);
+    } catch (err) {
+      showToast(err.message || 'Invalid email or password.', 'error');
+      resetBtn(submitBtn);
+    }
   });
 }
 
@@ -173,7 +217,7 @@ function initForgotForm() {
   const form = document.getElementById('forgotForm');
   if (!form) return;
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('forgotEmail');
     if (!isValidEmail(email.value)) {
@@ -183,15 +227,16 @@ function initForgotForm() {
     clearError(email, document.getElementById('forgotEmailError'));
 
     const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Sending link...';
-    submitBtn.disabled = true;
+    setBtnLoading(submitBtn, 'Sending link...');
 
-    // Placeholder for POST /api/auth/forgot-password
-    setTimeout(() => {
+    try {
+      await apiRequest('/auth/forgot-password', { method: 'POST', body: { email: email.value.trim() } });
       document.getElementById('forgotFormStep').style.display = 'none';
       document.getElementById('forgotSuccessStep').style.display = 'block';
-    }, 900);
+    } catch (err) {
+      showToast(err.message || 'Could not send reset link. Please try again.', 'error');
+      resetBtn(submitBtn);
+    }
   });
 }
 
@@ -200,7 +245,11 @@ function initResetForm() {
   const form = document.getElementById('resetForm');
   if (!form) return;
 
-  form.addEventListener('submit', (e) => {
+  // Token comes from the reset link: reset-password.html?token=xxxxx
+  const params = new URLSearchParams(window.location.search);
+  const resetToken = params.get('token');
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const pw = document.getElementById('resetPassword');
     const confirm = document.getElementById('resetConfirmPassword');
@@ -212,14 +261,15 @@ function initResetForm() {
     if (confirm.value !== pw.value || !confirm.value) { setError(confirm, document.getElementById('resetConfirmError'), 'Passwords do not match'); valid = false; }
     else clearError(confirm, document.getElementById('resetConfirmError'));
 
+    if (!resetToken) { showToast('Reset link is invalid or expired. Request a new one.', 'error'); valid = false; }
+
     if (!valid) return;
 
     const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Resetting...';
+    setBtnLoading(submitBtn, 'Resetting...');
 
-    // Placeholder for POST /api/auth/reset-password
-    setTimeout(() => {
+    try {
+      await apiRequest(`/auth/reset-password/${resetToken}`, { method: 'POST', body: { password: pw.value } });
       if (window.Swal) {
         Swal.fire({
           title: 'Password reset!',
@@ -229,9 +279,13 @@ function initResetForm() {
           confirmButtonText: 'Go to Login',
         }).then(() => window.location.href = 'login.html');
       } else {
-        window.location.href = 'login.html';
+        showToast('Password reset! Redirecting to login...', 'success');
+        setTimeout(() => window.location.href = 'login.html', 1200);
       }
-    }, 900);
+    } catch (err) {
+      showToast(err.message || 'Could not reset password. The link may have expired.', 'error');
+      resetBtn(submitBtn);
+    }
   });
 }
 
@@ -248,5 +302,28 @@ function initOtpInputs() {
     box.addEventListener('keydown', (e) => {
       if (e.key === 'Backspace' && !box.value && boxes[i - 1]) boxes[i - 1].focus();
     });
+  });
+
+  const verifyForm = document.getElementById('verifyForm');
+  if (!verifyForm) return;
+
+  verifyForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const code = Array.from(boxes).map(b => b.value).join('');
+    if (code.length !== boxes.length) {
+      showToast('Enter the full verification code.', 'error');
+      return;
+    }
+    const submitBtn = verifyForm.querySelector('button[type="submit"]');
+    setBtnLoading(submitBtn, 'Verifying...');
+
+    try {
+      await apiRequest('/auth/verify-email', { method: 'POST', body: { code } });
+      showToast('Email verified! Redirecting to your dashboard...', 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 1000);
+    } catch (err) {
+      showToast(err.message || 'Invalid or expired code.', 'error');
+      resetBtn(submitBtn);
+    }
   });
 }
