@@ -117,4 +117,83 @@ const getDashboardData = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { getDashboardData };
+/**
+ * GET /api/users/me/profile
+ * Full profile payload — everything the Profile screen needs in one call.
+ * Deliberately separate from GET /api/auth/me (which stays minimal, for
+ * auth-state checks) so the heavier profile aggregation doesn't run on
+ * every page load.
+ */
+const getMyProfileData = asyncHandler(async (req, res) => {
+  const user = req.user;
+  const tierProgress = computeTierProgress(user.xp);
+  const totalBattles = (user.battleWins || 0) + (user.battleLosses || 0);
+  const winRate = totalBattles > 0 ? Math.round((user.battleWins / totalBattles) * 100) : 0;
+
+  res.json({
+    success: true,
+    data: {
+      user: {
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        targetExam: user.targetExam,
+        level: user.level,
+        xp: user.xp,
+        coins: user.coins,
+        streakCount: user.streakCount,
+        battleWins: user.battleWins,
+        battleLosses: user.battleLosses,
+        winRate,
+        rankTier: tierProgress.tier,
+        nextRankTier: tierProgress.nextTier,
+        percentToNextTier: tierProgress.percentToNextTier,
+        memberSince: user.createdAt,
+      },
+      // Quiz history doesn't exist until Module 6, so accuracy/weekly/monthly
+      // trends are shaped placeholders — same contract, real data drops in later.
+      quizAccuracy: { overall: 0, source: 'placeholder' },
+      weeklyProgress: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], questionsSolved: [0, 0, 0, 0, 0, 0, 0], source: 'placeholder' },
+      monthlyProgress: { labels: ['W1', 'W2', 'W3', 'W4'], xpEarned: [0, 0, 0, 0], source: 'placeholder' },
+      activityTimeline: [
+        { type: 'account', text: 'Joined EduKnight', date: user.createdAt },
+      ],
+    },
+  });
+});
+
+/**
+ * PATCH /api/users/me
+ * Updates editable profile fields only. Email/password are intentionally
+ * excluded here — those go through dedicated, more carefully guarded
+ * auth flows instead of a generic profile update.
+ */
+const updateMyProfile = asyncHandler(async (req, res) => {
+  const allowedFields = ['name', 'targetExam', 'avatarUrl'];
+  const updates = {};
+
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) updates[field] = req.body[field];
+  }
+
+  if (updates.name && updates.name.trim().length < 2) {
+    return res.status(400).json({ success: false, message: 'Name must be at least 2 characters.' });
+  }
+  if (updates.targetExam && !['NEET', 'JEE', 'MHT-CET'].includes(updates.targetExam)) {
+    return res.status(400).json({ success: false, message: 'Invalid target exam.' });
+  }
+
+  const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
+
+  res.json({
+    success: true,
+    message: 'Profile updated.',
+    data: {
+      name: user.name,
+      targetExam: user.targetExam,
+      avatarUrl: user.avatarUrl,
+    },
+  });
+});
+
+module.exports = { getDashboardData, getMyProfileData, updateMyProfile };
