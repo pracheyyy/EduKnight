@@ -1,3 +1,7 @@
 cd backend
 npm install
+# fill in backend/.env from .env.example (Mongo URI, JWT secret, etc.)
+node utils/seedContent.js
+node utils/seedResources.js
+node utils/makeAdmin.js your@email.com   # after you've signed up once
 npm run dev

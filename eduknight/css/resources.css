@@ -1,0 +1,70 @@
+/* ==========================================================================
+   EduKnight — Resources
+   Reuses .app-shell / dcard / chapters-search / filter-pill from
+   dashboard.css and exams.css.
+   ========================================================================== */
+
+.res-category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 26px; }
+@media (max-width: 991px) { .res-category-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .res-category-grid { grid-template-columns: 1fr; } }
+
+.res-category-card {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-lg);
+  padding: 22px; cursor: pointer; transition: all 0.3s var(--ease-knight); text-align: center;
+}
+.res-category-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.res-category-card.active { border-color: var(--primary); background: rgba(37,99,235,0.05); box-shadow: var(--shadow-glow); }
+.res-category-card .rcc-icon { font-size: 30px; margin-bottom: 10px; display: block; }
+.res-category-card h4 { font-size: 14px; margin-bottom: 4px; }
+.res-category-card span { font-size: 12px; color: var(--text-muted); }
+
+.res-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 22px; flex-wrap: wrap; }
+.res-toolbar .chapters-search { flex: 1; min-width: 240px; }
+.res-exam-select {
+  border: 1.5px solid var(--border); border-radius: var(--radius-pill); background: var(--card);
+  padding: 10px 18px; font-size: 13.5px; font-weight: 600; color: var(--text); font-family: var(--font-body);
+}
+
+.res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+@media (max-width: 991px) { .res-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .res-grid { grid-template-columns: 1fr; } }
+
+.res-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  overflow: hidden; transition: all 0.3s var(--ease-knight); display: flex; flex-direction: column;
+}
+.res-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.res-card .rc-thumb {
+  height: 96px; display: flex; align-items: center; justify-content: center; font-size: 40px;
+  background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(16,185,129,0.08));
+  position: relative;
+}
+.res-card .rc-bookmark {
+  position: absolute; top: 10px; right: 10px;
+  width: 32px; height: 32px; border-radius: 50%; background: var(--card); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted);
+  transition: all 0.25s var(--ease-knight);
+}
+.res-card .rc-bookmark.active { color: var(--warning); border-color: var(--warning); background: rgba(245,158,11,0.1); }
+.res-card .rc-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
+.res-card .rc-type-tag {
+  align-self: flex-start; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 3px 9px; border-radius: var(--radius-pill); margin-bottom: 10px;
+}
+.rc-type-youtube { background: rgba(239,68,68,0.1); color: #EF4444; }
+.rc-type-notes { background: rgba(37,99,235,0.1); color: var(--primary); }
+.rc-type-formula-sheet { background: rgba(79,70,229,0.1); color: var(--secondary); }
+.rc-type-pyq-paper { background: rgba(16,185,129,0.1); color: var(--accent); }
+.res-card h4 { font-size: 14.5px; margin-bottom: 6px; line-height: 1.4; }
+.res-card p { font-size: 12.5px; margin-bottom: 14px; flex: 1; }
+.res-card .rc-footer { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); }
+.res-card .rc-footer a { font-size: 12.5px; font-weight: 700; color: var(--primary); }
+
+.res-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.res-page-btn {
+  width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--card);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-muted);
+  transition: all 0.25s var(--ease-knight);
+}
+.res-page-btn.active { background: var(--gradient-primary); color: #fff; border-color: transparent; }
+.res-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
